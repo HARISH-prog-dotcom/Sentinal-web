@@ -150,7 +150,8 @@ class Chat(BaseModel):
 @app.post("/api/chat")
 def chat(body: Chat):
     """Simple rule-based assistant (see chatbot.py). Not monitored: it lives under /api."""
-    return {"reply": chatbot.reply(body.message[:300])}
+    text, source = chatbot.reply(body.message[:300])  # source is "rules" or "ai"
+    return {"reply": text, "source": source}
 
 
 @app.get("/api/model")
