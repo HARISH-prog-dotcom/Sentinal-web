@@ -1,0 +1,45 @@
+flowchart LR
+  user([Security analyst<br/>browser])
+  tester([Tester / presenter<br/>browser])
+
+  subgraph LAB["SentinelWeb Lab · client/ · port 8001"]
+    direction TB
+    labui["Lab UI<br/>web/ (HTML, CSS, JS modules)"]
+    labapi["Lab API<br/>api/routes.py"]
+    registry["ScenarioRegistry<br/>builtin.json · packs/*.json · custom.json"]
+    runner["ScenarioRunner"]
+    gateway["SentinelGateway<br/>(adapter)"]
+    labui --> labapi
+    labapi --> registry
+    labapi --> runner
+    runner --> gateway
+  end
+
+  subgraph SW["SentinelWeb · dashboard/ · port 8000"]
+    direction TB
+    monitor["RequestMonitor<br/>middleware: 4-step pipeline"]
+    scanner["InputScanner<br/>SqlInjectionDetector · XssDetector"]
+    model["SqlInjectionModel<br/>TF-IDF + logistic regression"]
+    demo["Demo app<br/>/demo/* routes"]
+    repo[("EventRepository<br/>SQLite")]
+    apis["Dashboard + assistant APIs<br/>/api/*"]
+    assistant["ChatAssistant<br/>rules first, then AI"]
+    aistore["AiSettingsStore<br/>Settings page > .env > default"]
+    dashui["Dashboard UI<br/>web/ (HTML, CSS, JS modules)"]
+    monitor --> scanner
+    scanner --> model
+    monitor --> demo
+    monitor --> repo
+    apis --> repo
+    apis --> assistant
+    assistant --> aistore
+    dashui --> apis
+  end
+
+  ai[("Gemini / Groq<br/>optional AI")]
+
+  tester --> labui
+  user --> dashui
+  gateway -- "test traffic /demo/*" --> monitor
+  gateway -- "events, reset /api/*" --> apis
+  assistant -. "summary numbers only" .-> ai

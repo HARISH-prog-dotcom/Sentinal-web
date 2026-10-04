@@ -1,0 +1,25 @@
+sequenceDiagram
+  autonumber
+  participant C as Client (browser / Lab)
+  participant M as RequestMonitor
+  participant X as request_inputs
+  participant S as InputScanner
+  participant D as Demo app
+  participant R as EventRepository
+
+  C->>M: GET /demo/search?q=' OR '1'='1
+  M->>X: extract_request_inputs(path, query, body)
+  X-->>M: fields [("q", "' OR '1'='1")], username
+  M->>M: locked? request rate under limit?
+  M->>S: scan_inputs(fields)
+  S->>S: SqlInjectionDetector: rule "Quote-based tautology" + ML score
+  S-->>M: [Finding(SQL Injection pattern, HIGH)]
+  alt HIGH and blocking on
+    M->>R: add_event(..., HIGH, "Blocked (demo)")
+    M-->>C: 403 Blocked by SentinelWeb
+  else no finding
+    M->>D: call_next(request)
+    D-->>M: 200 results
+    M->>R: add_event(..., SAFE, "Allowed")
+    M-->>C: 200
+  end

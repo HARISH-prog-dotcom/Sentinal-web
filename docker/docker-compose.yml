@@ -1,0 +1,51 @@
+# Run SentinelWeb (dashboard, port 8000) and SentinelWeb Lab (port 8001) together.
+#
+#     cd docker
+#     docker compose up --build
+#
+# (or, from the project folder: docker compose -f docker/docker-compose.yml up --build)
+#
+# The image is built from the project folder (context ".."), so it contains the code, model and dataset.
+# Optional AI keys come from the project's .env file; that file is never copied into the image
+# (see ../.dockerignore). Needs Docker Compose 2.24 or newer for the optional env_file below.
+services:
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: sentinelweb:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: ../.env          # LLM_API_KEY, LLM_PROVIDER, LLM_MODEL, SENTINEL_BLOCK
+        required: false        # without .env everything still works with defaults
+    volumes:
+      - dashboard-data:/app/var
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/stats', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  lab:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: sentinelweb:latest
+    command: ["python", "-m", "client", "--host", "0.0.0.0", "--port", "8001", "--target", "http://dashboard:8000"]
+    ports:
+      - "8001:8001"
+    environment:
+      # Link for the "Open dashboard" button, as your browser sees it.
+      LAB_DASHBOARD_URL: ${LAB_DASHBOARD_URL:-http://localhost:8000}
+    volumes:
+      - lab-data:/app/var
+    depends_on:
+      dashboard:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  dashboard-data:
+  lab-data:

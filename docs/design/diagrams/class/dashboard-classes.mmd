@@ -1,0 +1,109 @@
+classDiagram
+  direction LR
+  class Settings {
+    +Path db_path
+    +Path ai_settings_path
+    +bool block_high_severity
+    +int request_limit
+    +int login_limit
+    +int lock_seconds
+    +frozenset skip_fields
+    +from_environment()$ Settings
+  }
+  class RequestMonitor {
+    -SlidingWindowCounter request_counter
+    -SlidingWindowCounter failed_login_counter
+    -LockRegistry locks
+    +__call__(request, call_next)
+    +reset()
+  }
+  class InputScanner {
+    -list~Detector~ detectors
+    +scan_inputs(inputs) list~Finding~
+  }
+  class Detector {
+    <<interface>>
+    +scan(field, value) list~Finding~
+  }
+  class SqlInjectionDetector {
+    -SqlInjectionModel model
+    +scan(field, value)
+  }
+  class XssDetector {
+    +scan(field, value)
+  }
+  class SqlInjectionModel {
+    +float threshold
+    +is_available bool
+    +score(text) float
+    +training_metrics() dict
+  }
+  class Finding {
+    +str category
+    +Severity severity
+    +str evidence
+  }
+  class Severity {
+    <<enumeration>>
+    HIGH
+    MEDIUM
+    LOW
+    SAFE
+  }
+  class EventRepository {
+    +add_event(...)
+    +list_events(severity, category, limit)
+    +get_event(id)
+    +get_stats()
+    +clear()
+  }
+  class SlidingWindowCounter {
+    +record_hit(key, window) int
+    +clear()
+  }
+  class LockRegistry {
+    +lock(key, seconds)
+    +is_locked(key) bool
+    +clear()
+  }
+  class ChatAssistant {
+    -RuleResponder rules
+    -CallBudget budget
+    +reply(message) tuple
+    +test_ai_connection() dict
+  }
+  class RuleResponder {
+    +answer(message) str
+  }
+  class AiSettingsStore {
+    +resolve() AiConfig
+    +public_view() dict
+    +save(provider, model, api_key)
+    +clear()
+  }
+  class LlmProvider {
+    <<abstract>>
+    +build_request(...)
+    +extract_text(reply)
+    +complete(api_key, model, system, question) str
+  }
+  class GeminiProvider
+  class GroqProvider
+
+  RequestMonitor --> Settings
+  RequestMonitor --> InputScanner
+  RequestMonitor --> EventRepository
+  RequestMonitor *-- SlidingWindowCounter
+  RequestMonitor *-- LockRegistry
+  InputScanner o-- Detector
+  Detector <|.. SqlInjectionDetector
+  Detector <|.. XssDetector
+  SqlInjectionDetector --> SqlInjectionModel
+  Detector ..> Finding : creates
+  Finding --> Severity
+  ChatAssistant *-- RuleResponder
+  ChatAssistant --> AiSettingsStore
+  ChatAssistant ..> LlmProvider : uses PROVIDERS
+  RuleResponder --> EventRepository
+  LlmProvider <|-- GeminiProvider
+  LlmProvider <|-- GroqProvider

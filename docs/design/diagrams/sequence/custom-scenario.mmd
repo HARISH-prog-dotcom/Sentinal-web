@@ -1,0 +1,23 @@
+sequenceDiagram
+  autonumber
+  actor T as Tester
+  participant ED as Scenario editor
+  participant API as Lab API
+  participant M as Scenario.from_dict
+  participant REG as ScenarioRegistry
+  participant F as custom.json
+
+  T->>ED: New scenario: title, steps, expected HIGH
+  ED->>API: POST /api/scenarios {scenario JSON}
+  API->>REG: create(data)
+  REG->>M: validate (path under /demo/, methods, repeat ≤ 50, ≤ 100 requests)
+  alt invalid
+    M-->>API: ScenarioError("Path must start with /demo/ ...")
+    API-->>ED: 400 + message shown in the editor
+  else valid
+    REG->>REG: unique id "custom-..."
+    REG->>F: atomic write under a lock
+    REG-->>API: Scenario
+    API-->>ED: 201 scenario
+    ED-->>T: new card in its group, ready to Run
+  end

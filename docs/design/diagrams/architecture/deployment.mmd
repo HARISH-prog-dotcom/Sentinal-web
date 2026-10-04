@@ -1,0 +1,22 @@
+flowchart TB
+  browser([Browser on the host or LAN])
+  envfile[/"project .env (optional AI keys)<br/>env_file: ../.env"/]
+
+  subgraph HOST["Docker host · cd docker && docker compose up --build"]
+    direction LR
+    subgraph C1["container: dashboard (image sentinelweb)"]
+      uv["uvicorn main:app<br/>port 8000"]
+      v1[("volume dashboard-data<br/>/app/var: sentinel.db, ai_settings.json")]
+      uv --- v1
+    end
+    subgraph C2["container: lab (same image)"]
+      lab["python -m client<br/>port 8001"]
+      v2[("volume lab-data<br/>/app/var: custom-scenarios.json")]
+      lab --- v2
+    end
+    lab -- "http://dashboard:8000<br/>(Compose network)" --> uv
+  end
+
+  browser -- "localhost:8000" --> uv
+  browser -- "localhost:8001" --> lab
+  envfile -. "LLM_* and SENTINEL_BLOCK" .-> uv

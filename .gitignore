@@ -3,3 +3,10 @@ __pycache__/
 *.pyc
 .env
 .DS_Store
+
+# Local data written at runtime (never commit)
+data/*.db
+data/ai_settings.json
+data/*.tmp
+client/scenarios/custom.json
+client/scenarios/*.tmp

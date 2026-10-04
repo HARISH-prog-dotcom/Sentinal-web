@@ -1,0 +1,31 @@
+{
+  "description": "Example scenario pack: attacks hidden in different kinds of input. Copy this file to add your own pack.",
+  "scenarios": [
+    {
+      "id": "pack-xss-comment", "group": "Input shapes (pack)", "title": "XSS in a comment (nested JSON)", "expect": "HIGH",
+      "description": "The payload sits inside a nested JSON object. SentinelWeb flattens nested JSON before scanning.",
+      "steps": [{"method": "POST", "path": "/demo/comments", "body_type": "json",
+                 "body": {"post": {"author": "eve", "text": "<img src=x onerror=alert(1)>"}}}]
+    },
+    {
+      "id": "pack-form-login", "group": "Input shapes (pack)", "title": "SQL injection in a form login", "expect": "HIGH",
+      "description": "A classic HTML-form login (form-encoded body) with an injection in the username.",
+      "steps": [{"method": "POST", "path": "/demo/login", "body_type": "form", "body": {"username": "admin' --", "password": "anything"}}]
+    },
+    {
+      "id": "pack-path-injection", "group": "Input shapes (pack)", "title": "Injection in the URL path", "expect": "HIGH",
+      "description": "The attack is part of the path itself, e.g. an item id. Paths with unusual characters are scanned.",
+      "steps": [{"method": "GET", "path": "/demo/items/1' OR '1'='1"}]
+    },
+    {
+      "id": "pack-text-body", "group": "Input shapes (pack)", "title": "Stacked query in a text body", "expect": "HIGH",
+      "description": "A plain-text request body that tries to run a second SQL statement.",
+      "steps": [{"method": "PUT", "path": "/demo/notes", "body_type": "text", "body": "1; DROP TABLE users"}]
+    },
+    {
+      "id": "pack-secret-field", "group": "Input shapes (pack)", "title": "Attack text in a password field", "expect": "SAFE",
+      "description": "Password, token and session fields are never scanned or stored, even when they contain attack text.",
+      "steps": [{"method": "POST", "path": "/demo/profile", "body_type": "json", "body": {"user": {"name": "bob", "password": "x' OR 1=1 --"}}}]
+    }
+  ]
+}

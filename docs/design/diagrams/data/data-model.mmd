@@ -1,0 +1,36 @@
+erDiagram
+  EVENTS {
+    int id PK "autoincrement"
+    text time "ISO local time"
+    text ip
+    text method
+    text path
+    text category "e.g. SQL Injection pattern"
+    text severity "HIGH | MEDIUM | LOW | SAFE"
+    text evidence "rule or ML score + input (max 60 chars)"
+    text action "Blocked (demo) | Flagged | Rate-limited | Allowed"
+    text explanation
+  }
+  AI_SETTINGS_JSON {
+    text provider "gemini | groq (optional)"
+    text model "optional"
+    text api_key "optional, never returned"
+  }
+  SCENARIO {
+    text id PK
+    text title
+    text group
+    text description
+    text expect "HIGH | MEDIUM | LOW | SAFE | ANY"
+    text source "builtin | pack:file | custom"
+  }
+  REQUEST_STEP {
+    text method "GET POST PUT PATCH DELETE"
+    text path "must start with /demo"
+    json query
+    text body_type "none | json | form | text"
+    json body "{n} = repetition number"
+    int repeat "1..50"
+  }
+  SCENARIO ||--|{ REQUEST_STEP : "has 1..10"
+  REQUEST_STEP ||--o{ EVENTS : "produces when run"

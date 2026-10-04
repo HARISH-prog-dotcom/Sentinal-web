@@ -1,0 +1,30 @@
+sequenceDiagram
+  autonumber
+  actor T as Tester
+  participant UI as Lab UI
+  participant API as Lab API
+  participant REG as ScenarioRegistry
+  participant RUN as ScenarioRunner
+  participant GW as SentinelGateway
+  participant SW as SentinelWeb
+
+  T->>UI: click Run on "Password guessing"
+  UI->>API: POST /api/run/brute-force
+  API->>REG: get("brute-force")
+  REG-->>API: Scenario (1 step, repeat 6)
+  API->>RUN: run(scenario)
+  RUN->>GW: latest_event_id()
+  GW->>SW: GET /api/events?limit=1
+  SW-->>GW: last id = 41
+  loop for each expanded request ({n} = 1..6)
+    RUN->>GW: send(POST, /demo/login, body password=guess{n})
+    GW->>SW: POST /demo/login
+    SW-->>GW: 401 (x5), then 429
+  end
+  RUN->>GW: events_after(41)
+  GW->>SW: GET /api/events?limit=200
+  SW-->>GW: new events (LOW x4, MEDIUM Repeated failed logins)
+  RUN->>RUN: compare_with_expectation(MEDIUM, events)
+  RUN-->>API: statuses, events, verdict matches = true
+  API-->>UI: JSON result
+  UI-->>T: result card: chips, verdict, "As expected"

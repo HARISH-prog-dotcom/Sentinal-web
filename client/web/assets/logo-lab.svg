@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SentinelWeb Lab logo">
+  <title>SentinelWeb Lab</title>
+  <!-- Same shield and pulse as SentinelWeb, in the Lab's teal, so the two products read as one family. -->
+  <path d="M32 3.5 55 11.8v18.6c0 14.6-9.8 25.4-23 30.9C18.8 55.8 9 45 9 30.4V11.8L32 3.5Z" fill="#0D9488"/>
+  <path d="M32 9.6 49.6 16v14.4c0 11.3-7.3 19.8-17.6 24.5-10.3-4.7-17.6-13.2-17.6-24.5V16L32 9.6Z" fill="none" stroke="#99F6E4" stroke-opacity=".45" stroke-width="1.6"/>
+  <path d="M15.5 33h8.2l3.6-8.6 6 17.4 4-11.2 2.6 2.4h8.6" fill="none" stroke="#FFFFFF" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="48.5" cy="48.5" r="9.5" fill="#0F172A"/>
+  <path d="M46 43.5h5M46.8 43.5v3.4l-3.3 5.6a1 1 0 0 0 .9 1.5h8.2a1 1 0 0 0 .9-1.5l-3.3-5.6v-3.4" fill="none" stroke="#5EEAD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

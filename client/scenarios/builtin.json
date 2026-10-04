@@ -1,0 +1,59 @@
+{
+  "scenarios": [
+    {
+      "id": "normal-search", "group": "Normal traffic", "title": "Product search", "expect": "SAFE", "expect_text": "200 OK · Normal",
+      "description": "A normal search. No rule matches, so SentinelWeb lets it through and logs it as Normal.",
+      "steps": [{"method": "GET", "path": "/demo/search", "query": {"q": "laptop"}}]
+    },
+    {
+      "id": "normal-items", "group": "Normal traffic", "title": "List products", "expect": "SAFE", "expect_text": "200 OK · Normal",
+      "description": "A plain page view with no user input.",
+      "steps": [{"method": "GET", "path": "/demo/items"}]
+    },
+    {
+      "id": "good-login", "group": "Normal traffic", "title": "Correct login", "expect": "SAFE", "expect_text": "200 OK · Normal",
+      "description": "A successful login. The password field is never scanned or stored.",
+      "steps": [{"method": "POST", "path": "/demo/login", "body_type": "json", "body": {"username": "alice", "password": "password123"}}]
+    },
+    {
+      "id": "sqli-rule", "group": "Injection attacks", "title": "SQL injection", "expect": "HIGH", "expect_text": "403 Blocked · High",
+      "description": "A classic always-true condition. A fixed rule matches, so it is High severity and blocked in the demo.",
+      "steps": [{"method": "GET", "path": "/demo/search", "query": {"q": "' OR '1'='1"}}]
+    },
+    {
+      "id": "sqli-union", "group": "Injection attacks", "title": "UNION SELECT", "expect": "HIGH", "expect_text": "403 Blocked · High",
+      "description": "Tries to append a second query that reads another table. Caught by the UNION SELECT rule.",
+      "steps": [{"method": "GET", "path": "/demo/search", "query": {"q": "1 UNION SELECT username, password FROM users"}}]
+    },
+    {
+      "id": "xss-rule", "group": "Injection attacks", "title": "Cross-site scripting", "expect": "HIGH", "expect_text": "403 Blocked · High",
+      "description": "Script-like text that a browser could run if a page showed it unsafely. Caught by an XSS rule.",
+      "steps": [{"method": "GET", "path": "/demo/search", "query": {"q": "<script>alert(1)</script>"}}]
+    },
+    {
+      "id": "ml-sleep", "group": "Injection attacks", "title": "Disguised SQL injection", "expect": "MEDIUM", "expect_text": "200 Flagged · Medium",
+      "description": "Written so no fixed rule matches. Only the ML model catches it, so it is flagged for review, not blocked.",
+      "steps": [{"method": "GET", "path": "/demo/search", "query": {"q": "1 or sleep(5)"}}]
+    },
+    {
+      "id": "ml-quote", "group": "Injection attacks", "title": "Disguised login bypass", "expect": "MEDIUM", "expect_text": "200 Flagged · Medium",
+      "description": "Another variant the rules miss. The model scores it as similar to known attacks.",
+      "steps": [{"method": "GET", "path": "/demo/search", "query": {"q": "admin\" or \"a\"=\"a"}}]
+    },
+    {
+      "id": "wrong-login", "group": "Login attacks", "title": "One wrong password", "expect": "LOW", "expect_text": "401 · Low",
+      "description": "A single failed login is normal. SentinelWeb records it so repeated attempts can be counted.",
+      "steps": [{"method": "POST", "path": "/demo/login", "body_type": "json", "body": {"username": "alice", "password": "wrong-password"}}]
+    },
+    {
+      "id": "brute-force", "group": "Login attacks", "title": "Password guessing", "expect": "MEDIUM", "expect_text": "401 until locked, then 429 · Medium",
+      "description": "Five failures in 60 seconds lock the account for 60 seconds. Attempts after that are rejected with 429.",
+      "steps": [{"method": "POST", "path": "/demo/login", "body_type": "json", "body": {"username": "alice", "password": "guess{n}"}, "repeat": 6}]
+    },
+    {
+      "id": "flood", "group": "Request floods", "title": "Request flood", "expect": "MEDIUM", "expect_text": "200 ×20, then 429 · Medium",
+      "description": "More than 20 requests in 10 seconds from one client locks that client out for 60 seconds.",
+      "steps": [{"method": "GET", "path": "/demo/items", "repeat": 25}]
+    }
+  ]
+}

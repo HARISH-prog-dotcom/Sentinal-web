@@ -1,0 +1,26 @@
+sequenceDiagram
+  autonumber
+  actor U as Analyst
+  participant UI as Dashboard UI
+  participant API as /api/chat
+  participant A as ChatAssistant
+  participant RR as RuleResponder
+  participant ST as AiSettingsStore
+  participant P as LlmProvider (Gemini / Groq)
+
+  U->>UI: "What is CSRF?"
+  UI->>API: POST /api/chat {message}
+  API->>A: reply(message)
+  A->>RR: answer(message)
+  RR-->>A: None (no rule matches)
+  A->>ST: resolve()
+  ST-->>A: provider, model, key (Settings page > .env > default)
+  alt key set and under 10 AI calls per minute
+    A->>P: complete(key, model, system prompt + summary numbers, question)
+    P-->>A: answer text
+    A-->>API: (answer, "ai")
+  else no key, quota used, or provider error
+    A-->>API: (help text, "rules")
+  end
+  API-->>UI: {reply, source}
+  UI-->>U: plain-text bubble

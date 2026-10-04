@@ -1,0 +1,10 @@
+stateDiagram-v2
+  direction LR
+  [*] --> Normal
+  Normal --> Counting: request or failed login
+  Counting --> Normal: window passes (10 s requests / 60 s logins)
+  Counting --> Locked: over 20 requests in 10 s (IP)\nor 5 failed logins in 60 s (account)
+  Locked --> Locked: requests get 429, not logged again
+  Locked --> Normal: 60 s lock ends
+  Locked --> Normal: Reset button (POST /api/reset)
+  Counting --> Normal: Reset button

@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  actor A as Admin
+  participant UI as Settings page
+  participant API as /api/settings/ai
+  participant ST as AiSettingsStore
+  participant F as data/ai_settings.json
+  participant CA as ChatAssistant
+
+  A->>UI: choose provider, paste key, Save
+  UI->>API: PUT {provider, model, api_key}
+  API->>ST: save(provider, model, api_key)
+  ST->>ST: validate provider, model name, key format
+  ST->>F: atomic write (chmod 600)
+  ST-->>API: public_view() (key hint "…1234", sources)
+  API-->>UI: settings without the key
+  A->>UI: Test connection
+  UI->>API: POST /api/settings/ai/test
+  API->>CA: test_ai_connection()
+  CA-->>API: {ok, message}
+  API-->>UI: "Connected to Google Gemini ..." or "HTTP 401 ..."
+  A->>UI: Remove saved settings
+  UI->>API: DELETE
+  API->>ST: clear() (falls back to .env)

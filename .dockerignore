@@ -1,0 +1,17 @@
+# Keep secrets, local data and large files out of the image.
+# This file must stay in the project root: it applies to the build context (the project folder),
+# while the Dockerfile and compose file live in docker/.
+.env
+.git
+.gitignore
+venv/
+__pycache__/
+*.pyc
+*.db
+data/ai_settings.json
+client/scenarios/custom.json
+models/*.joblib
+docs/
+*.pptx
+*.mp4
+results.md

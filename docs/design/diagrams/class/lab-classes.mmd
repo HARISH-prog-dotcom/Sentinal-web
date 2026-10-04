@@ -1,0 +1,69 @@
+classDiagram
+  direction LR
+  class LabSettings {
+    +str target_url
+    +str dashboard_url
+    +Path builtin_scenarios_path
+    +Path scenario_packs_dir
+    +Path custom_scenarios_path
+    +from_environment(target)$ LabSettings
+  }
+  class ScenarioRegistry {
+    -Lock lock
+    +list_all() list~Scenario~
+    +get(id) Scenario
+    +create(data) Scenario
+    +update(id, data) Scenario
+    +delete(id)
+    +import_scenarios(items) dict
+    +export_custom() dict
+  }
+  class Scenario {
+    +str id
+    +str title
+    +str group
+    +str expect
+    +str source
+    +list~RequestStep~ steps
+    +from_dict(data)$ Scenario
+    +describe() str
+    +to_public_dict() dict
+  }
+  class RequestStep {
+    +str method
+    +str path
+    +dict query
+    +str body_type
+    +any body
+    +int repeat
+    +from_dict(data)$ RequestStep
+    +expand() list
+    +describe() str
+  }
+  class ScenarioError {
+    <<exception>>
+  }
+  class ScenarioRunner {
+    +run(scenario) dict
+    +compare_with_expectation(expected, events)$ dict
+  }
+  class SentinelGateway {
+    +str base_url
+    +send(method, path, query, body_type, body)
+    +latest_event_id() int
+    +events_after(id) list
+    +model_info() dict
+    +demo_endpoints() dict
+    +reset() bool
+  }
+  class SentinelUnreachable {
+    <<exception>>
+  }
+
+  ScenarioRegistry o-- Scenario
+  Scenario *-- RequestStep
+  Scenario ..> ScenarioError : raises
+  ScenarioRunner --> SentinelGateway
+  ScenarioRunner ..> Scenario : runs
+  SentinelGateway ..> SentinelUnreachable : raises
+  ScenarioRegistry --> LabSettings

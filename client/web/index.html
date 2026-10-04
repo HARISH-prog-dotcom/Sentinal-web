@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SentinelWeb Lab</title>
+<link rel="icon" type="image/svg+xml" href="/static/assets/logo-lab.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/static/css/lab.css">
+<script type="module" src="/static/js/main.js"></script>
+</head>
+<body>
+<div class="backdrop" aria-hidden="true"></div>
+<div class="wrap">
+  <header class="bar glass">
+    <div class="brand">
+      <img class="logo" src="/static/assets/logo-lab.svg" alt="">
+      <div><h1>SentinelWeb Lab</h1><span>Safe test traffic for your SentinelWeb server</span></div>
+    </div>
+    <div class="target" id="target" role="status"><span class="dot"></span><span id="targetText">Checking SentinelWeb…</span></div>
+    <span class="spacer"></span>
+    <div class="actions">
+      <button class="btn primary" type="button" id="demoBtn">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>Run full demo</button>
+      <button class="btn" type="button" id="resetBtn" title="Clear SentinelWeb's events and lift all rate limits">Reset SentinelWeb</button>
+      <a class="btn" id="dashLink" href="#" target="_blank" rel="noopener">Open dashboard ↗</a>
+      <button class="btn" type="button" id="themeBtn" aria-label="Switch to light theme">Light</button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="panel glass" aria-labelledby="scTitle">
+      <div class="panel-head"><h2 id="scTitle">Scenarios</h2><span class="muted" style="font-size:12px">Each button sends real requests</span></div>
+      <div class="intro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+        <p>Pick a scenario to send harmless test requests to SentinelWeb's demo app, or build your own with <b>New scenario</b>. The result card shows the HTTP response and exactly how SentinelWeb classified it.</p>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" type="button" id="newScenarioBtn">+ New scenario</button>
+        <button class="btn" type="button" id="importBtn">Import</button>
+        <button class="btn" type="button" id="exportBtn">Export custom</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+        <span class="spacer"></span>
+        <span class="muted" style="font-size:12px" id="scenarioCount"></span>
+      </div>
+      <div id="groups"></div>
+      <div class="custom">
+        <h3 style="margin-bottom:10px">Quick input</h3>
+        <div class="seg" id="quickKind" role="group" aria-label="Quick input type">
+          <button type="button" data-kind="search" aria-pressed="true">Search</button><button type="button" data-kind="login" aria-pressed="false">Login</button>
+        </div>
+        <form id="searchForm">
+          <input type="text" id="quickQuery" placeholder="Type a search query" aria-label="Search query" maxlength="300" autocomplete="off">
+          <button class="btn primary" type="submit">Send</button>
+        </form>
+        <form id="loginForm" hidden>
+          <input type="text" id="quickUser" placeholder="Username" aria-label="Username" maxlength="60" autocomplete="off" value="alice">
+          <input type="password" id="quickPassword" placeholder="Password" aria-label="Password" maxlength="100" autocomplete="new-password">
+          <button class="btn primary" type="submit">Send</button>
+        </form>
+        <p class="hint" id="quickHint">Examples: <button type="button">keyboard</button> · <button type="button">' OR 1=1 --</button> · <button type="button">&lt;img src=x onerror=alert(1)&gt;</button></p>
+      </div>
+    </section>
+
+    <section class="panel glass results" aria-labelledby="resTitle">
+      <div class="panel-head"><h2 id="resTitle">Results</h2><button class="btn" type="button" id="clearBtn">Clear list</button></div>
+      <div class="progress" id="progress" aria-live="polite"><span id="progressText"></span><div class="track"><i id="progressBar" style="width:0"></i></div></div>
+      <ul class="feed" id="feed" aria-live="polite"><li class="empty" id="empty">Run a scenario to see what SentinelWeb does with it.</li></ul>
+    </section>
+  </main>
+</div>
+
+<!-- Scenario editor: create, edit or duplicate a scenario -->
+<dialog id="editor" aria-labelledby="editorTitle">
+  <form class="editor glass" id="editorForm" method="dialog" novalidate>
+    <div class="editor-head"><h2 id="editorTitle">New scenario</h2><button class="btn small" type="button" id="editorClose" aria-label="Close editor">✕</button></div>
+    <div class="editor-body">
+      <div class="field-row">
+        <div class="field"><label for="edTitle">Title</label><input type="text" id="edTitle" maxlength="80" required placeholder="e.g. XSS in a product review"></div>
+        <div class="field"><label for="edGroup">Group</label><input type="text" id="edGroup" maxlength="40" list="groupOptions" placeholder="Custom scenarios"><datalist id="groupOptions"></datalist></div>
+      </div>
+      <div class="field"><label for="edDescription">What does it test?</label><input type="text" id="edDescription" maxlength="400" placeholder="One sentence shown on the card"></div>
+      <div class="field-row">
+        <div class="field"><label for="edExpect">Expected SentinelWeb result</label>
+          <select id="edExpect"><option value="HIGH">High (blocked by a rule)</option><option value="MEDIUM">Medium (flagged or rate-limited)</option>
+            <option value="LOW">Low (failed login)</option><option value="SAFE">Normal (allowed)</option><option value="ANY">Don't check</option></select></div>
+        <div class="field"><label for="edExpectText">Expected outcome note (optional)</label><input type="text" id="edExpectText" maxlength="80" placeholder="e.g. 403 Blocked · High"></div>
+      </div>
+      <div class="field"><span class="label">Request steps</span>
+        <div id="edSteps"></div>
+        <div><button class="btn small" type="button" id="addStepBtn">+ Add step</button></div>
+        <p class="hint">Paths must start with <code>/demo/</code>. Use <code>{n}</code> in any value to insert the repetition number (1, 2, 3…). Known endpoints are suggested in the path box.</p>
+        <datalist id="pathOptions"></datalist>
+      </div>
+      <p class="error" id="editorError" role="alert"></p>
+    </div>
+    <div class="editor-foot">
+      <button class="btn" type="button" id="editorRun">Run without saving</button>
+      <button class="btn primary" type="submit" id="editorSave">Save scenario</button>
+    </div>
+  </form>
+</dialog>
+</body>
+</html>

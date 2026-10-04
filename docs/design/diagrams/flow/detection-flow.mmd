@@ -1,0 +1,28 @@
+flowchart TD
+  start([Request arrives]) --> demo{Path starts<br/>with /demo?}
+  demo -- no --> pass([Served normally,<br/>not monitored])
+  demo -- yes --> extract[Collect inputs: query, nested JSON,<br/>form, text body, unusual URL path.<br/>Drop password / token / session]
+  extract --> locked{IP or account<br/>locked?}
+  locked -- yes --> r429a([429 Rate-limited<br/>not logged again])
+  locked -- no --> rate{More than 20 requests<br/>in 10 s from this IP?}
+  rate -- yes --> flood[Lock IP 60 s<br/>log MEDIUM Suspicious API activity] --> r429b([429])
+  rate -- no --> scan[Run every detector on every input]
+  scan --> sqlirule{SQLi rule<br/>matches?}
+  sqlirule -- yes --> high[Finding: HIGH]
+  sqlirule -- no --> ml{ML score<br/>≥ 0.70?}
+  ml -- yes --> medium[Finding: MEDIUM,<br/>flag for review]
+  ml -- no --> xss{XSS rule<br/>matches?}
+  xss -- yes --> high
+  xss -- no --> none[No finding]
+  high --> block{Blocking on?<br/>SENTINEL_BLOCK=1}
+  block -- yes --> r403([Log HIGH, 403 Blocked])
+  block -- no --> flagged[Log HIGH, Flagged] --> app
+  medium --> flagged2[Log MEDIUM, Flagged] --> app
+  none --> app[Demo app handles the request]
+  app --> login{POST /demo/login<br/>returned 401?}
+  login -- yes --> count{5 failures in 60 s<br/>for this account?}
+  count -- yes --> lockacc([Lock account 60 s<br/>log MEDIUM Repeated failed logins])
+  count -- no --> low([Log LOW Failed login])
+  login -- no --> normal{Any finding<br/>logged?}
+  normal -- no --> safe([Log SAFE Normal request])
+  normal -- yes --> done([Response returned])

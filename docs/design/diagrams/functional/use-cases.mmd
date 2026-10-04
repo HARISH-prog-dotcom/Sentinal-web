@@ -1,0 +1,27 @@
+flowchart LR
+  analyst([Security analyst])
+  tester([Tester / presenter])
+  admin([Admin])
+
+  subgraph D["SentinelWeb (dashboard)"]
+    uc1(Monitor live traffic)
+    uc2(Investigate an event)
+    uc3(Filter, sort and export events to CSV)
+    uc4(Check detection metrics and rules)
+    uc5(Ask the assistant)
+    uc6(Add or test an AI key)
+    uc7(Reset events and rate limits)
+  end
+
+  subgraph L["SentinelWeb Lab (client)"]
+    uc8(Run a built-in or pack scenario)
+    uc9(Run the full demo)
+    uc10(Create, edit, duplicate or delete a custom scenario)
+    uc11(Import or export scenarios)
+    uc12(Send a quick search or login)
+  end
+
+  analyst --> uc1 & uc2 & uc3 & uc4 & uc5
+  admin --> uc6 & uc7
+  tester --> uc8 & uc9 & uc10 & uc11 & uc12
+  uc8 & uc9 & uc10 & uc12 -. "requests to /demo/*" .-> uc1

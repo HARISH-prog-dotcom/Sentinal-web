@@ -1,0 +1,29 @@
+flowchart LR
+  subgraph DASH["dashboard/web/js"]
+    main["main.js<br/>polling loop, wiring"]
+    store["core/store.js<br/>observable store"]
+    api["core/api.js<br/>dashboardApi"]
+    router["core/router.js"]
+    theme["core/theme.js"]
+    dom["core/dom.js + format.js"]
+    drawer["components/event-drawer.js"]
+    chart["components/activity-chart.js"]
+    views["views/: overview, events,<br/>detection, assistant, settings"]
+    main --> store & api & router & theme
+    main --> views
+    views --> drawer & chart
+    views --> api
+    drawer --> store
+    views & drawer & chart --> dom
+  end
+  subgraph LABJS["client/web/js"]
+    lmain["main.js<br/>wiring, full demo"]
+    lapi["core/api.js<br/>labApi"]
+    list["views/scenario-list.js"]
+    editor["views/scenario-editor.js"]
+    feed["views/results-feed.js"]
+    quick["views/quick-input.js"]
+    lmain --> lapi & list & editor & feed & quick
+  end
+  api -- "fetch /api/*" --> backend[(SentinelWeb API)]
+  lapi -- "fetch /api/*" --> labbackend[(Lab API)]
